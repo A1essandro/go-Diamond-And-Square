@@ -5,12 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"sync"
-	"time"
 )
-
-func Hm() {
-	println("asdasd")
-}
 
 type HeightMapGenerator struct {
 }
@@ -22,7 +17,7 @@ type generateOptions struct {
 
 type HeightMap [][]float32
 
-func (g HeightMapGenerator) Generate(persistance float32, size int) HeightMap {
+func (g HeightMapGenerator) Generate(size int, persistance float32) HeightMap {
 	options := generateOptions{
 		Size:        int(math.Pow(2, float64(size))) + 1,
 		Persistance: persistance,
@@ -32,15 +27,20 @@ func (g HeightMapGenerator) Generate(persistance float32, size int) HeightMap {
 		heightMap[i] = make([]float32, options.Size)
 	}
 
-	lastIndex := options.Size - 1
-	heightMap[0][0] = g.getOffset(options.Size, options)
-	heightMap[0][lastIndex] = g.getOffset(options.Size, options)
-	heightMap[lastIndex][0] = g.getOffset(options.Size, options)
-	heightMap[lastIndex][lastIndex] = g.getOffset(options.Size, options)
-
+	g.initCorners(&heightMap, options)
 	g.divide(&heightMap, options, options.Size)
 
 	return heightMap
+}
+
+func (g HeightMapGenerator) initCorners(heightMap *HeightMap, opt generateOptions) {
+	lastIndex := opt.Size - 1
+	hm := *heightMap
+
+	hm[0][0] = g.getOffset(opt.Size, opt)
+	hm[0][lastIndex] = g.getOffset(opt.Size, opt)
+	hm[lastIndex][0] = g.getOffset(opt.Size, opt)
+	hm[lastIndex][lastIndex] = g.getOffset(opt.Size, opt)
 }
 
 func (g HeightMapGenerator) getOffset(stepSize int, opt generateOptions) float32 {
@@ -69,7 +69,6 @@ func (g HeightMapGenerator) divide(heightMap *HeightMap, opt generateOptions, st
 
 func (g HeightMapGenerator) square(heightMap *HeightMap, opt generateOptions, x int, y int, size int, offset float32, wg *sync.WaitGroup) {
 	defer wg.Done()
-	time.Sleep(50 * time.Millisecond)
 	a := g.getCellHeight(heightMap, opt, x-size, y-size, size)
 	b := g.getCellHeight(heightMap, opt, x+size, y+size, size)
 	c := g.getCellHeight(heightMap, opt, x-size, y+size, size)
