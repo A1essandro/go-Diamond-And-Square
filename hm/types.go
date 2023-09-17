@@ -7,16 +7,21 @@ import (
 	"sync"
 )
 
+// Generator of Height Map
 type HeightMapGenerator struct {
 }
 
+// Internal struct for options
 type generateOptions struct {
 	Size        int
 	Persistance float32
 }
 
+// Type of height map (2d array)
 type HeightMap [][]float32
 
+// Main method of HeightMapGenerator
+// Generates HeightMap by options
 func (g HeightMapGenerator) Generate(size int, persistance float32) HeightMap {
 	options := generateOptions{
 		Size:        int(math.Pow(2, float64(size))) + 1,
@@ -33,6 +38,7 @@ func (g HeightMapGenerator) Generate(size int, persistance float32) HeightMap {
 	return heightMap
 }
 
+// Initializing corners of height map
 func (g HeightMapGenerator) initCorners(heightMap *HeightMap, opt generateOptions) {
 	lastIndex := opt.Size - 1
 	hm := *heightMap
@@ -43,10 +49,12 @@ func (g HeightMapGenerator) initCorners(heightMap *HeightMap, opt generateOption
 	hm[lastIndex][lastIndex] = g.getOffset(opt.Size, opt)
 }
 
+// Getting random offset of height
 func (g HeightMapGenerator) getOffset(stepSize int, opt generateOptions) float32 {
 	return float32(stepSize) / float32(opt.Size) * rand.Float32() * opt.Persistance
 }
 
+// Dividing algorithm
 func (g HeightMapGenerator) divide(heightMap *HeightMap, opt generateOptions, stepSize int) {
 	half := int(math.Floor(float64(stepSize) / 2.0))
 	size := len(*heightMap)
@@ -67,6 +75,7 @@ func (g HeightMapGenerator) divide(heightMap *HeightMap, opt generateOptions, st
 	g.divide(heightMap, opt, half)
 }
 
+// "Square" part of algorithm
 func (g HeightMapGenerator) square(heightMap *HeightMap, opt generateOptions, x int, y int, size int, offset float32, wg *sync.WaitGroup) {
 	defer wg.Done()
 	a := g.getCellHeight(heightMap, opt, x-size, y-size, size)
@@ -83,6 +92,7 @@ func (g HeightMapGenerator) square(heightMap *HeightMap, opt generateOptions, x 
 	g.diamond(heightMap, opt, x+size, y, size, g.getOffset(size, opt))
 }
 
+// "Diamond" part of alhorithm
 func (g HeightMapGenerator) diamond(heightMap *HeightMap, opt generateOptions, x int, y int, size int, offset float32) {
 	a := g.getCellHeight(heightMap, opt, x, y-size, size)
 	b := g.getCellHeight(heightMap, opt, x, y+size, size)
@@ -94,6 +104,7 @@ func (g HeightMapGenerator) diamond(heightMap *HeightMap, opt generateOptions, x
 	(*heightMap)[x][y] = average + offset
 }
 
+// Getting cell height. Random if outside height map boundaries
 func (g HeightMapGenerator) getCellHeight(heightMap *HeightMap, opt generateOptions, x int, y int, stepSize int) float32 {
 	hm := *heightMap
 	if x >= len(hm) || x < 0 || y >= len(hm[x]) || y < 0 {
@@ -102,6 +113,7 @@ func (g HeightMapGenerator) getCellHeight(heightMap *HeightMap, opt generateOpti
 	return hm[x][y]
 }
 
+// Print for debug
 func (heightMap HeightMap) Print() {
 	for _, v := range heightMap {
 		fmt.Printf("%v\n", v)
