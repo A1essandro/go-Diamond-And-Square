@@ -18,7 +18,7 @@ type generateContext struct {
 	HeightMap   *HeightMap
 }
 
-// Type of height map (2d array)
+// Type of height map
 type HeightMap [][]float32
 
 // Main method of HeightMapGenerator
